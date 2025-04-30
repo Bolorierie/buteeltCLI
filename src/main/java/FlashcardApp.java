@@ -67,7 +67,7 @@ public class FlashcardApp {
         }
 
         for (int round = 1; round <= repetitions; round++) {
-            System.out.println("=== Round " + round + " ===");
+            System.out.println("======= start =======");
 
             List<Flashcard> roundCards = new ArrayList<>(flashcards);
             if (order.equals("recent-mistakes-first")) {
@@ -104,7 +104,7 @@ public class FlashcardApp {
         System.out.println("Session complete.");
         System.out.println("Score: " + totalScore + " out of " + flashcards.size());
         saveFlashcards(fileName);
-        
+
         AchievementTracker tracker = new AchievementTracker();
         tracker.updateAchievements(flashcards);
         tracker.displayAchievements();
