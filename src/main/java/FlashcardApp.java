@@ -10,7 +10,6 @@ public class FlashcardApp {
             return;
         }
 
-        // Check if --help is present
         for (String arg : args) {
             if (arg.equals("--help")) {
                 printUsage();
@@ -23,7 +22,6 @@ public class FlashcardApp {
         int repetitions = 1;
         boolean invertCards = false;
 
-        // Parse options
         for (int i = 1; i < args.length; i++) {
             switch (args[i]) {
                 case "--order":
@@ -33,7 +31,7 @@ public class FlashcardApp {
                     }
                     order = args[++i];
                     if (!order.equals("random") && !order.equals("worst-first") && !order.equals("recent-mistakes-first")) {
-                        System.out.println("Error: Invalid value for --order. Allowed values: random, worst-first, recent-mistakes-first.");
+                        System.out.println("Error: Invalid value for --order.");
                         return;
                     }
                     break;
@@ -44,9 +42,7 @@ public class FlashcardApp {
                     }
                     try {
                         repetitions = Integer.parseInt(args[++i]);
-                        if (repetitions < 1) {
-                            throw new NumberFormatException();
-                        }
+                        if (repetitions < 1) throw new NumberFormatException();
                     } catch (NumberFormatException e) {
                         System.out.println("Error: --repetitions must be a positive integer.");
                         return;
@@ -62,18 +58,23 @@ public class FlashcardApp {
         }
 
         loadFlashcards(fileName);
-
         organizeFlashcards(order);
 
         Scanner scanner = new Scanner(System.in);
+        Map<Flashcard, Boolean> answeredCorrectly = new HashMap<>();
+        for (Flashcard card : flashcards) {
+            answeredCorrectly.put(card, false);
+        }
 
-        int cardIndex = 0;
-        while (cardIndex < flashcards.size()) {
-            Flashcard card = flashcards.get(cardIndex);
-            int correctInRow = 0;
-            int wrongAttempts = 0; // count wrong attempts for this card
+        for (int round = 1; round <= repetitions; round++) {
+            System.out.println("=== Round " + round + " ===");
 
-            while (correctInRow < repetitions) {
+            List<Flashcard> roundCards = new ArrayList<>(flashcards);
+            if (order.equals("recent-mistakes-first")) {
+                roundCards = new RecentMistakesFirstSorter().organize(roundCards);
+            }
+
+            for (Flashcard card : roundCards) {
                 String question = invertCards ? card.getAnswer() : card.getQuestion();
                 String answer = invertCards ? card.getQuestion() : card.getAnswer();
 
@@ -84,33 +85,26 @@ public class FlashcardApp {
                 if (userAnswer.trim().equalsIgnoreCase(answer.trim())) {
                     System.out.println("Correct!");
                     card.incrementCorrectCount();
-                    correctInRow++;
-                    wrongAttempts = 0; // reset wrong attempts
+                    answeredCorrectly.put(card, true);
                 } else {
                     System.out.println("Wrong. Correct answer: " + answer);
                     card.incrementMistakes();
-                    wrongAttempts++;
-
-                    // Reorganize flashcards using RecentMistakesFirstSorter
-                    RecentMistakesFirstSorter sorter = new RecentMistakesFirstSorter();
-                    flashcards = sorter.organize(flashcards);
-
-                    // If too many wrong attempts, move to next card
-                    if (wrongAttempts >= 3) {
-                        System.out.println("(Too many wrong attempts, moving to next card)");
-                        break;
-                    }
-
-                    // Restart from the first card
-                    
-                    break;
                 }
                 System.out.println();
             }
-            cardIndex++;
         }
 
         scanner.close();
+
+        int totalScore = 0;
+        for (Map.Entry<Flashcard, Boolean> entry : answeredCorrectly.entrySet()) {
+            if (entry.getValue()) totalScore++;
+        }
+
+        System.out.println("Session complete.");
+        System.out.println("Score: " + totalScore + " out of " + flashcards.size());
+        saveFlashcards(fileName);
+        
         AchievementTracker tracker = new AchievementTracker();
         tracker.updateAchievements(flashcards);
         tracker.displayAchievements();
@@ -123,12 +117,28 @@ public class FlashcardApp {
                 String[] parts = line.split("\\|");
                 if (parts.length == 2) {
                     flashcards.add(new Flashcard(parts[0].trim(), parts[1].trim()));
+                } else if (parts.length == 4) {
+                    String q = parts[0].trim();
+                    String a = parts[1].trim();
+                    int mistakes = Integer.parseInt(parts[2].trim());
+                    long lastTime = Long.parseLong(parts[3].trim());
+                    flashcards.add(new Flashcard(q, a, mistakes, lastTime));
                 }
             }
         } catch (IOException e) {
             System.out.println("Error reading file: " + e.getMessage());
         }
     }
+    private void saveFlashcards(String fileName) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(fileName))) {
+            for (Flashcard card : flashcards) {
+                writer.println(card.serialize());
+            }
+        } catch (IOException e) {
+            System.out.println("Error writing file: " + e.getMessage());
+        }
+    }
+    
 
     private void organizeFlashcards(String order) {
         if (order.equals("random")) {
@@ -136,8 +146,7 @@ public class FlashcardApp {
         } else if (order.equals("worst-first")) {
             flashcards.sort((c1, c2) -> Integer.compare(c2.getMistakes(), c1.getMistakes()));
         } else if (order.equals("recent-mistakes-first")) {
-            RecentMistakesFirstSorter sorter = new RecentMistakesFirstSorter();
-            flashcards = sorter.organize(flashcards);
+            flashcards = new RecentMistakesFirstSorter().organize(flashcards);
         }
     }
 
@@ -145,9 +154,9 @@ public class FlashcardApp {
         System.out.println("Usage: flashcard <cards-file> [options]");
         System.out.println("Options:");
         System.out.println("  --help                  Show help information");
-        System.out.println("  --order <order>          Sorting type (default: random)");
-        System.out.println("                           Options: random, worst-first, recent-mistakes-first");
-        System.out.println("  --repetitions <num>      Set number of correct repetitions required per card (default: 1)");
-        System.out.println("  --invertCards            Invert the questions and answers (default: false)");
+        System.out.println("  --order <order>         Sorting type (default: random)");
+        System.out.println("                          Options: random, worst-first, recent-mistakes-first");
+        System.out.println("  --repetitions <num>     Set number of times each card appears (default: 1)");
+        System.out.println("  --invertCards           Invert the questions and answers (default: false)");
     }
 }

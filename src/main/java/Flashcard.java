@@ -3,14 +3,18 @@ public class Flashcard {
     private String answer;
     private int mistakes;
     private int correctCount;
-    private long lastMistakeTime; // NEW
+    private long lastMistakeTime;
 
     public Flashcard(String question, String answer) {
+        this(question, answer, 0, 0);
+    }
+
+    public Flashcard(String question, String answer, int mistakes, long lastMistakeTime) {
         this.question = question;
         this.answer = answer;
-        this.mistakes = 0;
+        this.mistakes = mistakes;
         this.correctCount = 0;
-        this.lastMistakeTime = 0;
+        this.lastMistakeTime = lastMistakeTime;
     }
 
     public String getQuestion() {
@@ -29,16 +33,20 @@ public class Flashcard {
         return correctCount;
     }
 
-    public long getLastMistakeTime() { // NEW
+    public long getLastMistakeTime() {
         return lastMistakeTime;
     }
 
     public void incrementMistakes() {
         mistakes++;
-        lastMistakeTime = System.currentTimeMillis(); // mark the time of mistake
+        lastMistakeTime = System.currentTimeMillis();
     }
 
     public void incrementCorrectCount() {
         correctCount++;
+    }
+
+    public String serialize() {
+        return question + "|" + answer + "|" + mistakes + "|" + lastMistakeTime;
     }
 }

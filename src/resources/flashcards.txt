@@ -1,10 +1,10 @@
-Who is the main character you play as in Hades?|Zagreus
-What is the name of Zagreus' father in Hades?|Hades
-Which god offers boons related to lightning?|Zeus
-Which weapon is called the Stygian Blade?|Stygius
-Which god provides boons that focus on poison effects?|Dionysus
-What is the final boss battle usually against?|Hades
-Who helps Zagreus with speed and dodge boons?|Hermes
-Which god is associated with the sea and floods?|Poseidon
-Who offers boons that deal critical hits?|Artemis
-Which companion can you summon using the Companion Shady?|Sisyphus
+Which god is associated with the sea and floods?|Poseidon|2|1745986595778
+Which god offers boons related to lightning?|Zeus|2|1745986596749
+Who offers boons that deal critical hits?|Artemis|2|1745986596959
+What is the name of Zagreus' father in Hades?|Hades|2|1745986597129
+Who is the main character you play as in Hades?|Zagreus|2|1745986597316
+Which god provides boons that focus on poison effects?|Dionysus|2|1745986597495
+What is the final boss battle usually against?|Hades|2|1745986597679
+Which companion can you summon using the Companion Shady?|Sisyphus|2|1745986597881
+Who helps Zagreus with speed and dodge boons?|Hermes|2|1745986598093
+Which weapon is called the Stygian Blade?|Stygius|2|1745986598310
